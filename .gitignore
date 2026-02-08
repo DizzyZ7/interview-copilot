@@ -1,0 +1,23 @@
+# Go
+/bin/
+*.exe
+*.out
+
+# Node
+node_modules/
+dist/
+
+# Env
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
