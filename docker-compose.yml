@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: copilot-db
+    environment:
+      POSTGRES_USER: copilot
+      POSTGRES_PASSWORD: copilot
+      POSTGRES_DB: copilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: copilot-backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://copilot:copilot@db:5432/copilot?sslmode=disable
+      JWT_SECRET: supersecret
+    ports:
+      - "8080:8080"
+
+  frontend:
+    image: node:18
+    container_name: copilot-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
