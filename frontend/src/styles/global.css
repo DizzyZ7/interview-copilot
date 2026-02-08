@@ -1,0 +1,13 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #fafafa;
+  color: #111;
+}
+
+input,
+textarea,
+button {
+  padding: 8px;
+  margin: 4px 0;
+}
