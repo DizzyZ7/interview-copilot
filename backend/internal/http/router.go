@@ -1,10 +1,14 @@
 package http
 
 import (
+	"net/http"
+
 	"interview-copilot/backend/internal/auth"
 	"interview-copilot/backend/internal/config"
+	"interview-copilot/backend/internal/health"
 	"interview-copilot/backend/internal/http/handlers"
 	"interview-copilot/backend/internal/http/middleware"
+	"interview-copilot/backend/internal/metrics"
 	"interview-copilot/backend/internal/progress"
 	"interview-copilot/backend/internal/questions"
 	"interview-copilot/backend/internal/quiz"
@@ -13,18 +17,26 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func NewRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Recovery(), middleware.Logger())
+
+	// Core middleware
+	r.Use(gin.Recovery())
+	r.Use(middleware.Logger())
+	r.Use(metrics.Middleware())
+
+	// Infra
+	r.GET("/health", health.Handler)
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Auth
 	userRepo := &repository.UserRepo{DB: db}
 	authSvc := &service.AuthService{Users: userRepo, JWTSecret: cfg.JWTSecret}
 	authHandlers := handlers.New(authSvc)
 
-	r.GET("/health", authHandlers.Health)
 	r.POST("/auth/register", authHandlers.Register)
 	r.POST("/auth/login", authHandlers.Login)
 
@@ -39,6 +51,7 @@ func NewRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 	progressRepo := &progress.Repository{DB: db}
 	progressHandlers := progress.NewHandlers(progressRepo)
 
+	// Versioned API
 	api := r.Group("/api")
 	api.Use(auth.Middleware(cfg.JWTSecret))
 	{
@@ -59,9 +72,14 @@ func NewRouter(db *pgxpool.Pool, cfg *config.Config) *gin.Engine {
 
 		// Me
 		api.GET("/me", func(c *gin.Context) {
-			c.JSON(200, gin.H{"user_id": c.GetInt("user_id")})
+			c.JSON(http.StatusOK, gin.H{"user_id": c.GetInt("user_id")})
 		})
 	}
+
+	// 404 fallback
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "route not found"})
+	})
 
 	return r
 }
