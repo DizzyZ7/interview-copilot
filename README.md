@@ -1,5 +1,9 @@
 # Interview Copilot 🚀
 
+![CI](https://github.com/DizzyZ7/interview-copilot/actions/workflows/ci.yml/badge.svg)
+![Docker](https://github.com/DizzyZ7/interview-copilot/actions/workflows/docker.yml/badge.svg)
+![License](https://img.shields.io/github/license/DizzyZ7/interview-copilot)
+
 Production-grade interview preparation platform for backend & security engineers.
 
 ## Stack
