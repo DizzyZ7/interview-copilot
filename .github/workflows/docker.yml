@@ -1,0 +1,20 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t interview-copilot-backend ./backend
+
+      - name: Build frontend image
+        run: docker build -t interview-copilot-frontend ./frontend
+
+      - name: Build cli image
+        run: docker build -t interview-copilot-cli ./cli
